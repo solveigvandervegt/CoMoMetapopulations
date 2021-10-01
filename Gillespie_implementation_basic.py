@@ -30,6 +30,7 @@ avg_pop_size = approx_total_number_individuals/n
 x = np.repeat(0,n*c) # initialized compartments for all nodes
 x[0:-1:3] = np.rint(np.random.normal(1,0.5,10)*avg_pop_size) # initial all susceptible populations
 x[0:3] = [x[0]*0.95, x[0]*0.05, 0] # initial infections in first node
+x[x < 0] = 0
 x_store = [x]
 t_store = [0]
 t = 0
@@ -45,7 +46,7 @@ random_mat = np.random.random((n,n))
 edges_mat = np.zeros((n,n))
 for i in range(n):
     for j in range(i-1):
-        if (random_mat[i][j] <= 0.5 and i != j):
+        if (random_mat[i][j] <= 0.4 and i != j):
             edges_mat[i][j] = 1
             edges_mat[j][i] = 1 # assuming the connections go both directions
 
@@ -149,9 +150,9 @@ for i in range(1,n+1):
 
 # plot network graph
 G = nx.from_numpy_array(edges_mat, create_using=nx.DiGraph)
-labels = {0:1}
-for i in range(n-1):
-    labels[i+1] = i+2
+labels = {}
+for i in range(n):
+    labels[i] = i+1
 # G.degree 
 plt.figure(figsize=(9, 6))
 nx.draw(G, labels = labels)
