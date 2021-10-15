@@ -18,7 +18,7 @@ m = 0.07
 # lambda: probability of losing immunity
 l = 0.01
 # p: probability of moving
-p = 0.1
+p = 0.05
 
 
 # try for n nodes, fully connected
@@ -135,6 +135,21 @@ while t <= t_final:
     x_store.append(x)
     
 # plot results
+x_store = np.array(x_store)
+# plot results overall
+store_total = np.zeros([c,len(t_store)])
+for i in [0,1,2]:
+    temp = x_store[:,i:-1:3]
+    store_total[i] = np.sum(temp,axis = 1)
+
+plt.plot(t_store,store_total[0],color='darkred',lw=2)
+plt.plot(t_store,store_total[1],color='darkgreen',lw=2)
+plt.plot(t_store,store_total[2],color='darkblue',lw=2)
+plt.legend(["Total S","Total I","Total R"],fontsize=12)
+plt.tick_params(direction='in',size=6) 
+plt.title("Compartments summed over all patches")
+
+# plot results per node
 plt.subplots(figsize = (14,15))
 for i in range(1,n+1):
     plt.subplot(5,2,i)
