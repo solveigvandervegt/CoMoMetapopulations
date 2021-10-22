@@ -1,10 +1,10 @@
 import numpy as np
-def single_model_run(t_final,total_pop,nodes,p_edge,par):
+def single_model_run(t_final,total_pop,n,p_edge,par):
     """
     Function which runs a single instance of the stochastic SIR model.
     t_final: the final time point of the simulation.
     total_pop: approximate total number of individuals over all nodes.
-    nodes: number of nodes.
+    n: number of nodes.
     p_edge: probability of an edge existing between two nodes
     par: model parameters, being
         b: probability of infection
@@ -28,12 +28,11 @@ def single_model_run(t_final,total_pop,nodes,p_edge,par):
     
     # try for n nodes, fully connected
     # initial conditions of the form S1, I1, R1, S2, I2, R2, etc.
-    n = nodes # number of nodes
     c = 3 # number of compartments
     approx_total_number_individuals = total_pop
     avg_pop_size = approx_total_number_individuals/n
     x = np.repeat(0,n*c) # initialized compartments for all nodes
-    x[0:-1:c] = np.rint(np.random.normal(1,0.5,10)*avg_pop_size) # initial all susceptible populations
+    x[0:-1:c] = np.rint(np.random.normal(1,0.5,n)*avg_pop_size) # initial all susceptible populations
     x[0:c] = [x[0]*0.95, x[0]*0.05, 0] # initial infections in first node
     x[x < 0] = 0
     x_store = [x]

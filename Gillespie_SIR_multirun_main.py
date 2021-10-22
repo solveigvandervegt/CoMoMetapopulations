@@ -20,21 +20,21 @@ from Gillespie_SIR_function import single_model_run
 
 # model parameters
 # beta: probability of infection
-b = 0.4
+b = 0.3
 # mu: probability of recovery
 m = 1/10
 # lambda: probability of losing immunity
-l = 1/365
+l = 2/365
 # p: probability of moving
-p = 0.001
+p = 0.01
 
 
 # algorithm parameters
 n = 10 # number of nodes
 c = 3
 final_timepoint = 10*365 # final time point for simulations
-total_pop = 10**5 # approximate total population over all nodes
-number_of_runs = 10 # number of times we want to run the stochastic model
+total_pop = 10**4 # approximate total population over all nodes
+number_of_runs = 20 # number of times we want to run the stochastic model
 p_edge = 0.75
 
 store_totaltimetraces = []
@@ -79,3 +79,6 @@ for i in range(number_of_runs):
     plt.plot(ttemp[0],ttemp[1],color='grey',lw=1)
 plt.tick_params(direction='in',size=6) 
 plt.title("Number of infected compartments over time")
+
+plotname = "SIRmodel_"+str(n)+"nodes_"+str(total_pop)+"agents.eps"
+plt.savefig(plotname)
