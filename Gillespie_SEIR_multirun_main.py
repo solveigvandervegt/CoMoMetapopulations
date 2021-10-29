@@ -28,7 +28,7 @@ n = 10 # number of nodes
 c = 4 # number of compartments
 final_timepoint = 10*365 # final time point for simulations
 total_pop = 10**4 # approximate total population over all nodes
-number_of_runs = 20 # number of times we want to run the stochastic model
+number_of_runs = 50 # number of times we want to run the stochastic model
 p_edge = 0.75
 
 store_totaltimetraces = []
