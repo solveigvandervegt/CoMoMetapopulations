@@ -8,15 +8,15 @@ Created on Fri Oct 22 2021
 
 import numpy as np
 import matplotlib.pylab as plt
-from Gillespie_SEIR_function import single_model_run_SEIR
+from Gillespie_SEIR_function_diffnetwork import single_model_run_SEIR
 
 # model parameters
 # beta: probability of infection
-b = 0.3
+b = 0.8
 # gamma: probability of becoming infectious
-g = 1/3
+g = 1
 # mu: probability of recovery
-m = 1/7
+m = 1/5
 # lambda: probability of losing immunity
 l = 2/365
 # p: probability of moving
@@ -24,10 +24,10 @@ p = 0.01
 
 
 # algorithm parameters
-n = 10 # number of nodes
+n = 20 # number of nodes
 c = 4 # number of compartments
-final_timepoint = 10*365 # final time point for simulations
-total_pop = 10**4 # approximate total population over all nodes
+final_timepoint = 5*365 # final time point for simulations
+total_pop = 10**5 # approximate total population over all nodes
 number_of_runs = 50 # number of times we want to run the stochastic model
 p_edge = 0.75
 
