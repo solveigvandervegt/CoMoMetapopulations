@@ -1,13 +1,12 @@
 import numpy as np
 import random
 import math
-def single_model_run_SEIR(t_final,total_pop,n,p_edge,par,tau):
+def single_model_run_SEIR(t_final,total_pop,n,par,tau,edges_mat):
     """
     Function which runs a single instance of the stochastic SEIR model.
     t_final: the final time point of the simulation.
     total_pop: approximate total number of individuals over all nodes.
     n: number of nodes.
-    p_edge: probability of an edge existing between two nodes
     par: model parameters, being
         b: probability of infection
         g: probability of becoming infectious
@@ -15,6 +14,7 @@ def single_model_run_SEIR(t_final,total_pop,n,p_edge,par,tau):
         l: probability of loss of immunity
         p: probability of movement between nodes
     tau: time step for tau-leap algorithm
+    edges_mat: matrix defining the network
     
     returns: a list of timesteps, and a 2D numpy array of population size per node,
     per compartment, and the edge matrix.
@@ -40,7 +40,9 @@ def single_model_run_SEIR(t_final,total_pop,n,p_edge,par,tau):
     avg_pop_size = approx_total_number_individuals/n
     x = np.repeat(0,n*c) # initialized compartments for all nodes
     x[0:-1:c] = np.rint(np.random.normal(1,0.5,n)*avg_pop_size) # initial all susceptible populations
-    x[0:c] = [x[0]*0.95, 0, x[0]*0.05, 0] # initial infections in first node
+    init_node = random.randint(0,n-1)*c
+    x[init_node:init_node+c] = [x[init_node]*0.95, 0, x[init_node]*0.05, 0] # initial infections in first node
+    print(init_node)
     x[x < 0] = 0
     x_store = [x]
     t_store = [0]
@@ -51,46 +53,8 @@ def single_model_run_SEIR(t_final,total_pop,n,p_edge,par,tau):
     random_numbers = np.random.uniform(0,1,rand_to_generate)
     random_number_count = 0
     
-    # matrix of egdes between nodes
-    min_edges = 2 # minimum number of edges for a node
-    max_edges = np.floor(np.sqrt(n)) # maximum number of edges for a node
-    max_edges = max_edges.astype(int)
-    pdf = [x**(-3) for x in range(min_edges,max_edges+1)]
-    cdf = np.cumsum(pdf)
-    n_edges_per_node = np.random.uniform(0,cdf[-1],n)
-    list_of_stubs = []
-    for i in range(n):
-        c_edges = 0
-        # find minimum number of degrees for which U(0,1) is more than poisson prob.
-        while n_edges_per_node[i] > cdf[c_edges]:
-            c_edges += 1
-        n_edges_per_node[i] = c_edges + min_edges # save number of edges
-        list_of_stubs.extend([i]*(c_edges+min_edges)) # save number of stubs for network building
-    if len(list_of_stubs)%2 != 0: #if the number of edges is not even, we need to fix that
-        r_int = random.randint(0,n-1)
-        while list_of_stubs.count(list_of_stubs[r_int]) <= min_edges: # check that we don't decrease degree belwo minimum
-            r_int = random.randint(0,n-1)
-        list_of_stubs.remove(r_int)
-    edges_mat = np.zeros((n,n)) # initiate edges matrix
-    list_of_edges = [] # initiate list of all edges in network
-    while len(list_of_stubs)>0:
-        if (len(list_of_stubs) == 2) & (list_of_stubs[0] == list_of_stubs[1]): # cannot connect to own node
-            # break up previously made edge, and make two new ones
-            edges_mat[last_edge[0]][last_edge[1]] = 0
-            edges_mat[last_edge[1]][last_edge[0]] = 0
-            edges_mat[last_edge[0]][list_of_stubs[0]] = 1
-            edges_mat[last_edge[1]][list_of_stubs[1]] = 1
-            edges_mat[list_of_stubs[0]][last_edge[0]]= 1
-            edges_mat[list_of_stubs[1]][last_edge[1]] = 1
-            break
-        edge = random.sample(list_of_stubs,2) # create edge from two stubs
-        if (edge[0] != edge[1]) & ~(edge in list_of_edges): # check if not connecting to self and edge doesn't already exist
-            edges_mat[edge[0]][edge[1]] = 1 # connect nodes in edges matrix
-            edges_mat[edge[1]][edge[0]] = 1
-            list_of_stubs.remove(edge[0]) # remove stubs from list
-            list_of_stubs.remove(edge[1])
-            last_edge = edge
-            list_of_edges.append(edge) 
+    # comupte degree of each node
+    n_edges_per_node = [np.sum(x) for x in edges_mat]
 
     # list of reactions
     rxn = np.zeros((n*(n_rxn+n*c), n*c))
@@ -183,6 +147,7 @@ def single_model_run_SEIR(t_final,total_pop,n,p_edge,par,tau):
         
         # add reaction to population vector
         x = [sum(temp) for temp in zip(x,store_events)]
+        x = [max(temp,0) for temp in x]
         x_store.append(x)
         
     return t_store, np.array(x_store), edges_mat

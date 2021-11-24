@@ -119,3 +119,4 @@ for i in range(n):
 plt.figure(figsize=(9, 6))
 n_color = np.asarray([G.degree[n] for n in G.nodes])
 nx.draw(G, labels = labels, node_color = n_color)
+plt.savefig('network_example.eps')

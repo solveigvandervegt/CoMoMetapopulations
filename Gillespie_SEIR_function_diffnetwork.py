@@ -39,7 +39,9 @@ def single_model_run_SEIR(t_final,total_pop,n,par,edges_mat):
     avg_pop_size = approx_total_number_individuals/n
     x = np.repeat(0,n*c) # initialized compartments for all nodes
     x[0:-1:c] = np.rint(np.random.normal(1,0.5,n)*avg_pop_size) # initial all susceptible populations
-    x[0:c] = [x[0]*0.95, 0, x[0]*0.05, 0] # initial infections in first node
+    # infect random node
+    init_node = random.randint(0,n-1)*c
+    x[init_node:init_node+c] = [x[init_node]*0.95, 0, x[init_node]*0.05, 0] # initial infections in first node
     x[x < 0] = 0
     x_store = [x]
     t_store = [0]
