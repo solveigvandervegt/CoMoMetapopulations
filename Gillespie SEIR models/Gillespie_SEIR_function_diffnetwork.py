@@ -142,9 +142,9 @@ def single_model_run_SEIR(t_final,total_pop,n,par,edges_mat):
     # start loop over time
     tracker = 0
     while t <= t_final:
-        if tracker > 1:
-            print(t)
-            tracker = 0
+        #if tracker > 1:
+        #    print(t)
+        #    tracker = 0
         # compute propensities
         prop = np.array([])
         for i in range(n):

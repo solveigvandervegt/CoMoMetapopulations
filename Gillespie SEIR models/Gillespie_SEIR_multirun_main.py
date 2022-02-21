@@ -9,8 +9,12 @@ Created on Fri Oct 22 2021
 import numpy as np
 import matplotlib.pylab as plt
 from Gillespie_SEIR_function_diffnetwork import single_model_run_SEIR
+from Gillespie_SEIR_function_effupdate import single_model_run_SEIR_eff
 import random
 import networkx as nx
+import datetime
+
+begin = datetime.datetime.now()
 
 # model parameters
 # beta: probability of infection
@@ -29,61 +33,96 @@ p = 0.01
 n = 20 # number of nodes
 c = 4 # number of compartments
 final_timepoint = 1*365 # final time point for simulations
-total_pop = 10**5 # approximate total population over all nodes
-number_of_runs = 20 # number of times we want to run the stochastic model
+total_pop = 10**4 # approximate total population over all nodes
+number_of_runs = 5 # number of times we want to run the stochastic model
 
 store_totaltimetraces = []
 store_fractionInodes = []
 
 # build network
-# matrix of egdes between nodes
-min_edges = 2 # minimum number of edges for a node
-max_edges = np.floor(np.sqrt(n)) # maximum number of edges for a node
-max_edges = max_edges.astype(int)
-# get poisson distribution of degrees
-pdf = [x**(-3) for x in range(min_edges,max_edges+1)]
-cdf = np.cumsum(pdf)
-n_edges_per_node = np.random.uniform(0,cdf[-1],n)
-list_of_stubs = []
-# get number of edges per node, save and save in list of stubs
-for i in range(n):
-    c_edges = 0
-    # find minimum number of degrees for which U(0,1) is more than poisson prob.
-    while n_edges_per_node[i] > cdf[c_edges]:
-        c_edges += 1
-    n_edges_per_node[i] = c_edges + min_edges # save number of edges
-    list_of_stubs.extend([i]*n_edges_per_node[i].astype(int)) # save number of stubs for network building
-if len(list_of_stubs)%2 != 0: #if the number of edges is not even, we need to fix that
-    r_int = random.randint(0,n-1)
-    while list_of_stubs.count(list_of_stubs[r_int]) <= min_edges: # check that we don't decrease degree belwo minimum
-        r_int = random.randint(0,n-1)
-    list_of_stubs.remove(r_int)
-edges_mat = np.zeros((n,n)) # initiate edges matrix
-list_of_edges = [] # initiate list of all edges in network
 print('Building network...')
+# new degree generation (for old, see singlerun)
+list_of_degrees = nx.generators.random_graphs.random_powerlaw_tree_sequence(n,gamma = 3,tries=5000)
+list_of_degrees = [x+1 for x in list_of_degrees] # minimum degree 2 of each node
+if np.sum(list_of_degrees)%2 != 0:
+    r_int = random.randint(0,n-1)
+    list_of_degrees[r_int] += 1
+
+list_of_stubs =[]
+for i in range(n):
+    list_of_stubs.extend(list_of_degrees[i]*[i])
+
+
+adjacency_matrix = np.zeros((n,n)) # initiate edges matrix
+list_of_edges = [] # initiate list of all edges in network
 while len(list_of_stubs)>0:
     if (len(list_of_stubs) == 2) & (list_of_stubs[0] == list_of_stubs[1]): # cannot connect to own node
         # break up previously made edge, and make two new ones
-        edges_mat[last_edge[0]][last_edge[1]] = 0
-        edges_mat[last_edge[1]][last_edge[0]] = 0
-        edges_mat[last_edge[0]][list_of_stubs[0]] = 1
-        edges_mat[last_edge[1]][list_of_stubs[1]] = 1
-        edges_mat[list_of_stubs[0]][last_edge[0]]= 1
-        edges_mat[list_of_stubs[1]][last_edge[1]] = 1
+        adjacency_matrix[last_edge[0]][last_edge[1]] = 0
+        adjacency_matrix[last_edge[1]][last_edge[0]] = 0
+        adjacency_matrix[last_edge[0]][list_of_stubs[0]] = 1
+        adjacency_matrix[last_edge[1]][list_of_stubs[1]] = 1
+        adjacency_matrix[list_of_stubs[0]][last_edge[0]]= 1
+        adjacency_matrix[list_of_stubs[1]][last_edge[1]] = 1
         break
     edge = random.sample(list_of_stubs,2) # create edge from two stubs
     if (edge[0] != edge[1]) & ~(edge in list_of_edges) & ~([edge[1], edge[0]] in list_of_edges): # check if not connecting to self and edge doesn't already exist
-        edges_mat[edge[0]][edge[1]] = 1 # connect nodes in edges matrix
-        edges_mat[edge[1]][edge[0]] = 1
+        adjacency_matrix[edge[0]][edge[1]] = 1 # connect nodes in edges matrix
+        adjacency_matrix[edge[1]][edge[0]] = 1
         list_of_stubs.remove(edge[0]) # remove stubs from list
         list_of_stubs.remove(edge[1])
         last_edge = edge
         list_of_edges.append(edge) 
+        
+
+# list of reactions
+print('Building list of reactions...')
+n_rxn = 4 # number of reaction within compartment
+rxn = np.zeros((n*(n_rxn+n*c), n*c))
+for i in range(n):
+    # compartment reactions
+    StoE = np.repeat(0,n*c)
+    StoE[i*c] = -1
+    StoE[i*c+1] = 1
+    rxn[i*(n_rxn+(n*c))] = StoE
+    EtoI = np.repeat(0,n*c)
+    EtoI[i*c+1] = -1
+    EtoI[i*c+2] = 1
+    rxn[i*(n_rxn+(n*c))+1] = EtoI
+    ItoR = np.repeat(0,n*c)
+    ItoR[i*c+2] = -1
+    ItoR[i*c+3] = 1
+    rxn[i*(n_rxn+(n*c))+2] = ItoR
+    RtoS = np.repeat(0,n*c)
+    RtoS[i*c+3] = -1
+    RtoS[i*c] = 1
+    rxn[i*(n_rxn+(n*c))+3] = RtoS
+    # movement reactions
+    #count = 0
+    for j in range(n):
+        if adjacency_matrix[i][j] == 1:
+            Sitoj = np.repeat(0,n*c)
+            Sitoj[i*c] = -1
+            Sitoj[j*c] = 1
+            rxn[i*(n_rxn+(n*c)) + c + j*c] = Sitoj
+            Eitoj = np.repeat(0,n*c)
+            Eitoj[i*c + 1] = -1
+            Eitoj[j*c + 1] = 1
+            rxn[i*(n_rxn+(n*c)) + c + j*c + 1] = Eitoj
+            Iitoj = np.repeat(0,n*c)
+            Iitoj[i*c + 2] = -1
+            Iitoj[j*c + 2] = 1
+            rxn[i*(n_rxn+(n*c)) + c + j*c + 2] = Iitoj
+            Ritoj = np.repeat(0,n*c)
+            Ritoj[i*c + 3] = -1
+            Ritoj[j*c + 3] = 1
+            rxn[i*(n_rxn+(n*c)) + c + j*c + 3] = Ritoj
 
 #%%
 for i in range(number_of_runs):
     print("Starting instance %d" %(i+1))
-    t,x,em = single_model_run_SEIR(final_timepoint,total_pop,n,np.array([b,g,m,l,p]),edges_mat)
+    #t,x,em = single_model_run_SEIR(final_timepoint,total_pop,n,np.array([b,g,m,l,p]),adjacency_matrix)
+    t,x = single_model_run_SEIR_eff(final_timepoint,total_pop,n,np.array([b,g,m,l,p]),adjacency_matrix,rxn)
     print("Finished simulation, processing output...")
     # store necessary information from this run
     # total S, E, I and R over time
@@ -124,3 +163,5 @@ plt.title("Number of infected compartments over time")
 
 plotname = "SEIRmodel_"+str(n)+"nodes_"+str(total_pop)+"agents.eps"
 plt.savefig(plotname)
+
+print(datetime.datetime.now()-begin)
