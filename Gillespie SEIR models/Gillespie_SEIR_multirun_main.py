@@ -13,6 +13,7 @@ from Gillespie_SEIR_function_effupdate import single_model_run_SEIR_eff
 import random
 import networkx as nx
 import datetime
+import pandas as pd
 
 begin = datetime.datetime.now()
 
@@ -32,9 +33,9 @@ p = 0.01
 # algorithm parameters
 n = 20 # number of nodes
 c = 4 # number of compartments
-final_timepoint = 1*365 # final time point for simulations
+final_timepoint = 100 # final time point for simulations
 total_pop = 10**4 # approximate total population over all nodes
-number_of_runs = 5 # number of times we want to run the stochastic model
+number_of_runs = 1 # number of times we want to run the stochastic model
 
 store_totaltimetraces = []
 store_fractionInodes = []
@@ -72,8 +73,8 @@ while len(list_of_stubs)>0:
         list_of_stubs.remove(edge[0]) # remove stubs from list
         list_of_stubs.remove(edge[1])
         last_edge = edge
-        list_of_edges.append(edge) 
-        
+        list_of_edges.append(edge)
+
 
 # list of reactions
 print('Building list of reactions...')
@@ -150,7 +151,7 @@ for i in range(number_of_runs):
     plt.plot(ttemp[0],ttemp[1][2],color='darkgreen',lw=1)
     plt.plot(ttemp[0],ttemp[1][3],color='darkblue',lw=1)
 plt.legend(["Total S","Total E","Total I","Total R"],fontsize=12)
-plt.tick_params(direction='in',size=6) 
+plt.tick_params(direction='in',size=6)
 plt.title("Compartments summed over all patches")
 
 # plot number of infected nodes over time
@@ -158,10 +159,26 @@ plt.subplot(1,2,2)
 for i in range(number_of_runs):
     ttemp = store_fractionInodes[i]
     plt.plot(ttemp[0],ttemp[1],color='grey',lw=1)
-plt.tick_params(direction='in',size=6) 
+plt.tick_params(direction='in',size=6)
 plt.title("Number of infected compartments over time")
 
 plotname = "SEIRmodel_"+str(n)+"nodes_"+str(total_pop)+"agents.eps"
 plt.savefig(plotname)
 
 print(datetime.datetime.now()-begin)
+print(x.shape)
+print(len(t))
+
+# create a new dataframe where seir are columns and nodes are stacked
+nrows = len(t) * n
+ncols = 6
+y = np.empty([nrows, ncols])
+for tt in range(len(t)):
+    for i in range(n):
+        for j in range(4):
+            y[i + (tt - 1) * n, j] = x[tt, j + (i - 1) * 4]
+        y[i + (tt - 1) * n, 4] = i + 1
+        y[i + (tt - 1) * n, 5] = t[tt]
+
+df = pd.DataFrame(y, columns=['s', 'e', 'i', 'r', 'node', 't'])
+df.to_csv("test.csv", index=False)

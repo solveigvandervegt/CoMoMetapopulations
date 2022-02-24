@@ -1,0 +1,24 @@
+---
+title: "Plot networked data"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+```
+
+```{r}
+library(tidyverse)
+df <- read.csv("test.csv")
+df_long <- df %>% 
+  pivot_longer(c("s", "e", "i", "r"))
+```
+
+Plot
+```{r}
+df_long %>% 
+  ggplot(aes(x=t, y=value, group=as.factor(node))) +
+  geom_line() +
+  facet_wrap(~name)
+```
+
