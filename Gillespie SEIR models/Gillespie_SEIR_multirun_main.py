@@ -8,10 +8,11 @@ Created on Fri Oct 22 2021
 
 import numpy as np
 import matplotlib.pylab as plt
-from Gillespie_SEIR_function_diffnetwork import single_model_run_SEIR
 from Gillespie_SEIR_function_effupdate import single_model_run_SEIR_eff
-import random
-import networkx as nx
+from network_function import build_powerlaw_network
+from reactionvector_function import build_reaction_vector_list
+#import random
+#import networkx as nx
 import datetime
 
 begin = datetime.datetime.now()
@@ -41,82 +42,11 @@ store_fractionInodes = []
 
 # build network
 print('Building network...')
-# new degree generation (for old, see singlerun)
-list_of_degrees = nx.generators.random_graphs.random_powerlaw_tree_sequence(n,gamma = 3,tries=5000)
-list_of_degrees = [x+1 for x in list_of_degrees] # minimum degree 2 of each node
-if np.sum(list_of_degrees)%2 != 0:
-    r_int = random.randint(0,n-1)
-    list_of_degrees[r_int] += 1
-
-list_of_stubs =[]
-for i in range(n):
-    list_of_stubs.extend(list_of_degrees[i]*[i])
-
-
-adjacency_matrix = np.zeros((n,n)) # initiate edges matrix
-list_of_edges = [] # initiate list of all edges in network
-while len(list_of_stubs)>0:
-    if (len(list_of_stubs) == 2) & (list_of_stubs[0] == list_of_stubs[1]): # cannot connect to own node
-        # break up previously made edge, and make two new ones
-        adjacency_matrix[last_edge[0]][last_edge[1]] = 0
-        adjacency_matrix[last_edge[1]][last_edge[0]] = 0
-        adjacency_matrix[last_edge[0]][list_of_stubs[0]] = 1
-        adjacency_matrix[last_edge[1]][list_of_stubs[1]] = 1
-        adjacency_matrix[list_of_stubs[0]][last_edge[0]]= 1
-        adjacency_matrix[list_of_stubs[1]][last_edge[1]] = 1
-        break
-    edge = random.sample(list_of_stubs,2) # create edge from two stubs
-    if (edge[0] != edge[1]) & ~(edge in list_of_edges) & ~([edge[1], edge[0]] in list_of_edges): # check if not connecting to self and edge doesn't already exist
-        adjacency_matrix[edge[0]][edge[1]] = 1 # connect nodes in edges matrix
-        adjacency_matrix[edge[1]][edge[0]] = 1
-        list_of_stubs.remove(edge[0]) # remove stubs from list
-        list_of_stubs.remove(edge[1])
-        last_edge = edge
-        list_of_edges.append(edge) 
+adjacency_matrix = build_powerlaw_network(n)
         
-
 # list of reactions
 print('Building list of reactions...')
-n_rxn = 4 # number of reaction within compartment
-rxn = np.zeros((n*(n_rxn+n*c), n*c))
-for i in range(n):
-    # compartment reactions
-    StoE = np.repeat(0,n*c)
-    StoE[i*c] = -1
-    StoE[i*c+1] = 1
-    rxn[i*(n_rxn+(n*c))] = StoE
-    EtoI = np.repeat(0,n*c)
-    EtoI[i*c+1] = -1
-    EtoI[i*c+2] = 1
-    rxn[i*(n_rxn+(n*c))+1] = EtoI
-    ItoR = np.repeat(0,n*c)
-    ItoR[i*c+2] = -1
-    ItoR[i*c+3] = 1
-    rxn[i*(n_rxn+(n*c))+2] = ItoR
-    RtoS = np.repeat(0,n*c)
-    RtoS[i*c+3] = -1
-    RtoS[i*c] = 1
-    rxn[i*(n_rxn+(n*c))+3] = RtoS
-    # movement reactions
-    #count = 0
-    for j in range(n):
-        if adjacency_matrix[i][j] == 1:
-            Sitoj = np.repeat(0,n*c)
-            Sitoj[i*c] = -1
-            Sitoj[j*c] = 1
-            rxn[i*(n_rxn+(n*c)) + c + j*c] = Sitoj
-            Eitoj = np.repeat(0,n*c)
-            Eitoj[i*c + 1] = -1
-            Eitoj[j*c + 1] = 1
-            rxn[i*(n_rxn+(n*c)) + c + j*c + 1] = Eitoj
-            Iitoj = np.repeat(0,n*c)
-            Iitoj[i*c + 2] = -1
-            Iitoj[j*c + 2] = 1
-            rxn[i*(n_rxn+(n*c)) + c + j*c + 2] = Iitoj
-            Ritoj = np.repeat(0,n*c)
-            Ritoj[i*c + 3] = -1
-            Ritoj[j*c + 3] = 1
-            rxn[i*(n_rxn+(n*c)) + c + j*c + 3] = Ritoj
+rxn = build_reaction_vector_list(n,c,adjacency_matrix)
 
 #%%
 for i in range(number_of_runs):

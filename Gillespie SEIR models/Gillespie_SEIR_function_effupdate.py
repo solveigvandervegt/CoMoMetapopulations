@@ -61,9 +61,9 @@ def single_model_run_SEIR_eff(t_final,total_pop,n,par,edges_mat,rxn):
     # start loop over time
     tracker = 0
     while t <= t_final:
-        #if tracker > 50:
-            #print(t)
-            #tracker = 0
+        if tracker > 50:
+            print(t)
+            tracker = 0
         # compute propensities if first time point
         if t == 0:
             prop = np.array([])
