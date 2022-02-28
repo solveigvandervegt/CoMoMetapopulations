@@ -39,18 +39,17 @@ number_of_runs = 5 # number of times we want to run the stochastic model
 
 store_totaltimetraces = []
 store_fractionInodes = []
-
-# build network
-print('Building network...')
-adjacency_matrix = build_powerlaw_network(n)
         
-# list of reactions
-print('Building list of reactions...')
-rxn = build_reaction_vector_list(n,c,adjacency_matrix)
-
 #%%
 for i in range(number_of_runs):
     print("Starting instance %d" %(i+1))
+    # build network
+    print('Building network...')
+    adjacency_matrix = build_powerlaw_network(n)
+    # list of reactions
+    print('Building list of reactions...')
+    rxn = build_reaction_vector_list(n,c,adjacency_matrix)
+    print('Starting simulation...')
     #t,x,em = single_model_run_SEIR(final_timepoint,total_pop,n,np.array([b,g,m,l,p]),adjacency_matrix)
     t,x = single_model_run_SEIR_eff(final_timepoint,total_pop,n,np.array([b,g,m,l,p]),adjacency_matrix,rxn)
     print("Finished simulation, processing output...")

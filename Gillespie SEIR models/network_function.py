@@ -33,10 +33,9 @@ def build_powerlaw_network(n):
     adjacency_matrix = np.zeros((n,n)) # initiate edges matrix
     list_of_edges = [] # initiate list of all edges in network
     while len(list_of_stubs)>0:
-        print(list_of_stubs)
         if (len(list_of_stubs) == 2) & ((list_of_stubs[0] == list_of_stubs[1]) or (list_of_stubs in list_of_edges)): # cannot connect to own node
             # if fault in last edge, just start over
-            list_of_stubs = list_of_stubs_store
+            list_of_stubs = list_of_stubs_store.copy()
             adjacency_matrix = np.zeros((n,n)) # initiate edges matrix
             list_of_edges = [] # initiate list of all edges in network
         else :

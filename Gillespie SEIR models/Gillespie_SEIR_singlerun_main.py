@@ -32,7 +32,6 @@ n = 10# number of nodes
 c = 4
 final_timepoint = 20 # final time point for simulations
 total_pop = 10000 # approximate total population over all nodes
-#p_edge = 0.75
 
 # build network, obtain adjacency matrix
 adjacency_matrix = build_powerlaw_network(n)
