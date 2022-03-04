@@ -35,11 +35,10 @@ n = 20 # number of nodes
 c = 4 # number of compartments
 final_timepoint = 1*365 # final time point for simulations
 total_pop = 10**4 # approximate total population over all nodes
-number_of_runs = 5 # number of times we want to run the stochastic model
+number_of_runs = 20 # number of times we want to run the stochastic model
 
 store_totaltimetraces = []
-store_fractionInodes = []
-        
+store_fractionInodes = []        
 #%%
 for i in range(number_of_runs):
     print("Starting instance %d" %(i+1))
