@@ -88,4 +88,4 @@ def single_model_run_SEIR_eff(t_final,total_pop,n,par,adjacency_matrix,rxn):
         x = [sum(temp) for temp in zip(x, current_rxn)]
         x_store.append(x)
         
-    return t_store, np.array(x_store)
+    return t_store, x_store #np.array(x_store)

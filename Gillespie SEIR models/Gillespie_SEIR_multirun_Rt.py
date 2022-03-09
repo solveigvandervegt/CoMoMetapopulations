@@ -15,8 +15,9 @@ from Rt_function import Rt
 #import random
 #import networkx as nx
 import datetime
+import math
 
-begin = datetime.datetime.now()
+#begin = datetime.datetime.now()
 
 # model parameters
 # beta: probability of infection
@@ -60,47 +61,61 @@ for i in range(number_of_runs):
     #    np.append(store_all,[x],axis=0)
 
     # process outputs of simulation to compute Rt values per simulation
+    # select earliest timepoint in each day
+    t_day = [t[0]]
+    x_day = [x[0]]
+    for ii in range(1,len(t)):
+        if math.floor(t[ii]) != math.floor(t[ii-1]):
+            t_day.append(t[ii])
+            x_day.append(x[ii])
+    
     # local
-    store_local_Rt = np.zeros((n,len(t))) 
+    store_local_Rt = [[0]*len(t_day) for _ in range(n)]#np.zeros((n,len(t_day))) 
     for ii in range(n):
-        for jj in range(len(t)):
-            store_local_Rt[ii][jj] = Rt(x[jj][ii*4],b,m)
+        for jj in range(len(t_day)):
+            store_local_Rt[ii][jj] = Rt(x_day[jj][ii*4]/sum(x_day[jj][ii*4:ii*4+4]),b,m)
     
     #regional: at most one edge from center node
-    store_regional_Rt = np.zeros((n,len(t)))
+    store_regional_Rt = [[0]*len(t_day) for _ in range(n)]#np.zeros((n,len(t_day)))
     for ii in range(n):
-        for jj in range(len(t)):
-            St = x[jj][ii*4]
-            for kk in adjacency_matrix[ii]:
-                if kk == 1:
-                    St = St + x[jj][int(kk)*4]
-            store_regional_Rt[ii][jj] = Rt(St,b,m)
+        for jj in range(len(t_day)):
+            St = x_day[jj][ii*4]
+            regional_total_pop = sum(x_day[jj][ii*4:ii*4+4])
+            for kk in range(len(adjacency_matrix[ii])):
+                if adjacency_matrix[ii][kk] == 1:
+                    St = St + x_day[jj][int(kk)*4]
+                    regional_total_pop = regional_total_pop + sum(x_day[jj][int(kk)*4:int(kk)*4+4])
+            store_regional_Rt[ii][jj] = Rt(St/regional_total_pop,b,m)
     
     #global
-    store_global_Rt = np.zeros(len(t)) 
-    for jj in range(len(t)):
-        temp = x[jj,0:-1:c]
+    global_total_pop = sum(x[0])
+    store_global_Rt = [0]*len(t_day) #np.zeros(len(t_day)) 
+    for jj in range(len(t_day)):
+        temp = x_day[jj][0:-1:c]
         St = np.sum(temp)
-        store_global_Rt[jj] = Rt(St,b,m)
+        store_global_Rt[jj] = Rt(St/global_total_pop,b,m)
     
     #store all Rt values appropriately
     if i ==0:
         local_Rts = [store_local_Rt]
         regional_Rts = [store_regional_Rt]
         global_Rts = [store_global_Rt]
-        time_series = [t]
+        time_series = [t_day]
     else:
-        np.append(local_Rts,[store_local_Rt],axis=0)
-        np.append(regional_Rts,[store_regional_Rt],axis=0)
-        np.append(global_Rts,[store_global_Rt],axis=0)
-        np.append(time_series,[t],axis=0)
+        #np.append(local_Rts,[store_local_Rt],axis=0)
+        #np.append(regional_Rts,[store_regional_Rt],axis=0)
+        #np.append(global_Rts,[store_global_Rt],axis=0)
+        local_Rts.append(store_local_Rt)
+        regional_Rts.append(store_regional_Rt)
+        global_Rts.append(store_global_Rt)
+        time_series.append(t_day)
 
 #%% 
 # plot Rt outputs over time
 color = plt.cm.rainbow(np.linspace(0,1,number_of_runs))
 plt.figure(figsize = (9,3))
 for ii in range(number_of_runs):
-    plt.plot(time_series[ii],global_Rts[ii],color = color[ii])
+    plt.plot(time_series[ii],global_Rts[ii],color = color[ii],linewidth=0.5)
 plt.title('Global Rt')
 plt.xlabel('time')
 plt.ylabel('Rt')
@@ -109,7 +124,7 @@ plt.show
 plt.figure(figsize = (9,3))
 for ii in range(number_of_runs):
     for jj in range(n):
-        plt.plot(time_series[ii],local_Rts[ii][jj],color = color[ii])
+        plt.plot(time_series[ii],local_Rts[ii][jj],color = color[ii],linewidth=0.5)
 plt.title('Local Rt')
 plt.xlabel('time')
 plt.ylabel('Rt')
@@ -118,8 +133,21 @@ plt.show
 plt.figure(figsize = (9,3))
 for ii in range(number_of_runs):
     for jj in range(n):
-        plt.plot(time_series[ii],regional_Rts[ii][jj],color = color[ii])
+        plt.plot(time_series[ii],regional_Rts[ii][jj],color = color[ii],linewidth=0.5)
 plt.title('Regional Rt')
 plt.xlabel('time')
 plt.ylabel('Rt')
+plt.show
+
+#%%
+plt.figure(figsize = (9,9))
+for ii in range(number_of_runs):
+    for jj in range(n):
+        plt.plot(global_Rts[ii],local_Rts[ii][jj],color = color[ii],linewidth=0.5)
+plt.plot([x for x in range(5)],[x for x in range(5)],'k--',linewidth=0.5)
+plt.title('Global vs Local Rt')
+plt.xlabel('Global Rt')
+plt.ylabel('Local Rt')
+plt.xlim([0,4])
+plt.ylim([0,4])
 plt.show
