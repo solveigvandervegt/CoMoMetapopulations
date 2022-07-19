@@ -33,11 +33,11 @@ p = 0.01
 
 
 # algorithm parameters
-n = 20 # number of nodes
+n = 100 # number of nodes
 c = 4 # number of compartments
-final_timepoint = 1*365 # final time point for simulations
+final_timepoint = 2*365 # final time point for simulations
 total_pop = 10**4 # approximate total population over all nodes
-number_of_runs = 5 # number of times we want to run the stochastic model
+number_of_runs = 1 # number of times we want to run the stochastic model
 
 
 #%%
@@ -68,13 +68,13 @@ for i in range(number_of_runs):
         if math.floor(t[ii]) != math.floor(t[ii-1]):
             t_day.append(t[ii])
             x_day.append(x[ii])
-    
+
     # local
-    store_local_Rt = [[0]*len(t_day) for _ in range(n)]#np.zeros((n,len(t_day))) 
+    store_local_Rt = [[0]*len(t_day) for _ in range(n)]#np.zeros((n,len(t_day)))
     for ii in range(n):
         for jj in range(len(t_day)):
             store_local_Rt[ii][jj] = Rt(x_day[jj][ii*4]/sum(x_day[jj][ii*4:ii*4+4]),b,m)
-    
+
     #regional: at most one edge from center node
     store_regional_Rt = [[0]*len(t_day) for _ in range(n)]#np.zeros((n,len(t_day)))
     for ii in range(n):
@@ -86,15 +86,15 @@ for i in range(number_of_runs):
                     St = St + x_day[jj][int(kk)*4]
                     regional_total_pop = regional_total_pop + sum(x_day[jj][int(kk)*4:int(kk)*4+4])
             store_regional_Rt[ii][jj] = Rt(St/regional_total_pop,b,m)
-    
+
     #global
     global_total_pop = sum(x[0])
-    store_global_Rt = [0]*len(t_day) #np.zeros(len(t_day)) 
+    store_global_Rt = [0]*len(t_day) #np.zeros(len(t_day))
     for jj in range(len(t_day)):
         temp = x_day[jj][0:-1:c]
         St = np.sum(temp)
         store_global_Rt[jj] = Rt(St/global_total_pop,b,m)
-    
+
     #store all Rt values appropriately
     if i ==0:
         local_Rts = [store_local_Rt]
@@ -110,7 +110,7 @@ for i in range(number_of_runs):
         global_Rts.append(store_global_Rt)
         time_series.append(t_day)
 
-#%% 
+#%%
 # plot Rt outputs over time
 color = plt.cm.rainbow(np.linspace(0,1,number_of_runs))
 plt.figure(figsize = (9,3))
@@ -121,6 +121,9 @@ plt.xlabel('time')
 plt.ylabel('Rt')
 plt.show
 
+plotname = "SEIRmodel_Rt_test_global.eps"
+plt.savefig(plotname)
+
 plt.figure(figsize = (9,3))
 for ii in range(number_of_runs):
     for jj in range(n):
@@ -130,6 +133,9 @@ plt.xlabel('time')
 plt.ylabel('Rt')
 plt.show
 
+plotname = "SEIRmodel_Rt_test_local.eps"
+plt.savefig(plotname)
+
 plt.figure(figsize = (9,3))
 for ii in range(number_of_runs):
     for jj in range(n):
@@ -138,6 +144,9 @@ plt.title('Regional Rt')
 plt.xlabel('time')
 plt.ylabel('Rt')
 plt.show
+
+plotname = "SEIRmodel_Rt_test_regional.eps"
+plt.savefig(plotname)
 
 #%%
 plt.figure(figsize = (9,9))
@@ -151,3 +160,6 @@ plt.ylabel('Local Rt')
 plt.xlim([0,4])
 plt.ylim([0,4])
 plt.show
+
+plotname = "SEIRmodel_Rt_test.eps"
+plt.savefig(plotname)
