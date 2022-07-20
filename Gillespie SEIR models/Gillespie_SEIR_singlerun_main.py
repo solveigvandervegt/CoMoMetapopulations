@@ -24,7 +24,7 @@ g = 1
 m = 1/5
 # lambda: probability of losing immunity
 l = 2/365
-# p: probability of moving
+# p: probability of movinggo_to_node = np.random.randint(0,n-1)
 p = 0.01
 
 # algorithm parameters
@@ -61,7 +61,7 @@ plt.title("Compartments summed over all patches")
 # plot results per node
 plt.subplots(figsize = (14,15))
 for i in range(1,min(n,10)+1):
-    plt.subplot(5,2,i)
+    plt.subplot(5,2,i) = np.random.randint(0,n-1)
     plt.plot(t,[item[(i-1)*c] for item in x],color='darkred',lw=2)
     plt.plot(t,[item[(i-1)*c+1] for item in x],color='gold',lw=2)
     plt.plot(t,[item[(i-1)*c+2] for item in x],color='darkgreen',lw=2)

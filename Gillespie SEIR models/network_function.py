@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import networkx as nx
 def build_powerlaw_network(n):
     """
     Function which builds a single-component network where the degrees of the nodes
