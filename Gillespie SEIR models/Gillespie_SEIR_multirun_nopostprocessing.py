@@ -19,6 +19,7 @@ from global_Rt_function import compute_global_Rt
 #import networkx as nx
 #import datetime
 import math
+import pickle
 
 # model parameters
 # beta: probability of infection
@@ -34,12 +35,16 @@ p = 0.01
 
 
 # algorithm parameters
-n = 10 # number of nodes
+n = 100 # number of nodes
 c = 4 # number of compartments
-final_timepoint = 100 # final time point for simulations
-total_pop = 10**3 # approximate total population over all nodes
+final_timepoint = 2 * 365 # final time point for simulations
+total_pop = 10**4 # approximate total population over all nodes
 number_of_runs = 1 # number of times we want to run the stochastic model
 
+
+def dump_file(obj, obj_name, basefile):
+    with open(basefile + obj_name + ".bin", "wb") as f:
+        pickle.dump(obj, f)
 
 #%%
 for i in range(number_of_runs):
@@ -72,3 +77,7 @@ for i in range(number_of_runs):
     else:
         time_series.append(t_day)
         population_series.append(x_day)
+
+basefile = "simulations/network_sim_" + str(n) + "_" + str(final_timepoint) + "_" + str(total_pop) + "_"
+dump_file(population_series, "population_series", basefile)
+dump_file(time_series, "time_series", basefile)
