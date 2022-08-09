@@ -17,20 +17,20 @@ from datetime import datetime
 
 # model parameters
 # beta: probability of infection
-b = 0.8
+b = 0.21 #0.8
 # gamma: probability of becoming infectious
-g = 1
+g = 1/7 #1
 # mu: probability of recovery
-m = 1/5
+m = 1/14 #1/5
 # lambda: probability of losing immunity
-l = 2/365
+l = 1/365 #2/365
 # p: probability of movinggo_to_node = np.random.randint(0,n-1)
 p = 0.01
 
 # algorithm parameters
 n = 10# number of nodes
 c = 4
-final_timepoint = 20 # final time point for simulations
+final_timepoint = 2*365 # final time point for simulations
 total_pop = 10000 # approximate total population over all nodes
 
 # build network, obtain adjacency matrix
@@ -45,8 +45,8 @@ t,x = single_model_run_SEIR_eff(final_timepoint,total_pop,n,np.array([b,g,m,l,p]
 #%%
 # plot results overall
 store_total = np.zeros([c,len(t)])
-for i in [0,1,2,3]:
-    temp = x[:,i:-1:c]
+for i in range(c):
+    temp = [item[i:-1:c] for item in x]
     store_total[i] = np.sum(temp,axis = 1)
 
 #%%
@@ -61,7 +61,7 @@ plt.title("Compartments summed over all patches")
 # plot results per node
 plt.subplots(figsize = (14,15))
 for i in range(1,min(n,10)+1):
-    plt.subplot(5,2,i) = np.random.randint(0,n-1)
+    plt.subplot(5,2,i)
     plt.plot(t,[item[(i-1)*c] for item in x],color='darkred',lw=2)
     plt.plot(t,[item[(i-1)*c+1] for item in x],color='gold',lw=2)
     plt.plot(t,[item[(i-1)*c+2] for item in x],color='darkgreen',lw=2)

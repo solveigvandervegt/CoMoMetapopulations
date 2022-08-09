@@ -37,8 +37,8 @@ p = 0.01
 # algorithm parameters
 n = 100 # number of nodes
 c = 4 # number of compartments
-final_timepoint = 2 * 365 # final time point for simulations
-total_pop = 10**4 # approximate total population over all nodes
+final_timepoint = 5 * 365 # final time point for simulations
+total_pop = 10**5 # approximate total population over all nodes
 number_of_runs = 1 # number of times we want to run the stochastic model
 
 
@@ -81,3 +81,4 @@ for i in range(number_of_runs):
 basefile = "simulations/network_sim_" + str(n) + "_" + str(final_timepoint) + "_" + str(total_pop) + "_"
 dump_file(population_series, "population_series", basefile)
 dump_file(time_series, "time_series", basefile)
+dump_file(adjacency_matrix, "adjacency_matrix", basefile)

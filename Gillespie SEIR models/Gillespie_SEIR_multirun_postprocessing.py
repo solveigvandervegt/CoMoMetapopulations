@@ -29,20 +29,24 @@ p = 0.01
 # algorithm parameters
 n = 100 # number of nodes
 c = 4 # number of compartments
-final_timepoint = 730 # final time point for simulations
-total_pop = 10**4 # approximate total population over all nodes
+final_timepoint = 5 * 365 # final time point for simulations
+total_pop = 10**5 # approximate total population over all nodes
 number_of_runs = 1 # number of times we want to run the stochastic model
 
 
 #%%
 
-with open("./simulations/network_sim_100_730_10000_time_series.bin","rb") as input_file:
+with open("./simulations/network_sim_100_1825_100000_time_series_220729.bin","rb") as input_file:
 #with open("./simulations/network_sim_100_10_1000_global_Rts.bin","rb") as input_file:
     time_series = pickle.load(input_file)
 
-with open("./simulations/network_sim_100_730_10000_population_series.bin","rb") as input_file:
+with open("./simulations/network_sim_100_1825_100000_population_series_220729.bin","rb") as input_file:
 #with open("./simulations/network_sim_100_10_1000_global_Rts.bin","rb") as input_file:
     population_series = pickle.load(input_file)
+
+with open("./simulations/network_sim_100_1825_100000_adjacency_matrix_220729.bin","rb") as input_file:
+#with open("./simulations/network_sim_100_10_1000_global_Rts.bin","rb") as input_file:
+    adjacency_matrix = pickle.load(input_file)
 
 #%%
 # NOTE: functions compute_X_Rt compute Rts for ONE run of the mode.
@@ -51,8 +55,8 @@ if number_of_runs > 1:
     print('All code written below this statement is for one run of the model. You must adapt to allow for processing of multiple runs.')
 print('Starting computation of local Rt values...')
 local_Rts = compute_local_Rt(time_series[0],population_series[0],n,b,m)
-#print('Starting computation of regional Rt values...')
-#regional_Rts = compute_regional_Rt(time_series[0],population_series[0],n,b,m,adjacency_matrix)
+print('Starting computation of regional Rt values...')
+regional_Rts = compute_regional_Rt(time_series[0],population_series[0],n,b,m,adjacency_matrix)
 print('Starting computation of global Rt values...')
 global_Rts = compute_global_Rt(time_series[0],population_series[0],n,b,m,c)
 #%%
