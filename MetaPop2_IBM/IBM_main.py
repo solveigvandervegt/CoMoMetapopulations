@@ -13,21 +13,22 @@ from reactionvector_function import build_reaction_vector_list
 import pickle
 
 # model parameters
-# beta: probability of infection
-b = 0.8
-# gamma: probability of becoming infectious
-g = 1
-# mu: probability of recovery
-m = 1/10
-# lambda: probability of losing immunity
+# beta: probability of infection for each age class
+b = [0.75, 0.8, 0.85]
+# gamma: probability of becoming infectious for each age class
+g = [0.2, 0.35, 0.5]
+# mu: probability of recovery for each age class
+m = [1/5, 1/10, 1/15]
+# lambda: probability of losing immunity, assumed the same for all age classes
 l = 2/365
 
 
 
 # algorithm parameters
 c = 4 # number of compartments
-final_timepoint = 100 # final time point for simulations
-number_of_runs = 20 # number of times we want to run the stochastic model
+final_timepoint = 250 # final time point for simulations
+number_of_runs = 5 # number of times we want to run the stochastic model
+init_infec = 20 #number of individuals infected at t=0
 
 def dump_file(obj, obj_name, basefile):
     with open(basefile + obj_name + ".bin", "wb") as f:
@@ -35,28 +36,25 @@ def dump_file(obj, obj_name, basefile):
 
 #%% run simulations with overdispersed network
 plt.figure()
+# import network
+print('Import network...')
+# choose an overdispersed network
+with open("./example_network_overdispersed.pickle","rb") as input_file:
+    temp = pickle.load(input_file)
+group_membership = temp[1] # which age class does each individual belong to
+n = len(group_membership) #number of individuals in simulation
+adjacency_matrix = temp[0]
+# list of reactions
+print('Building list of reactions...')
+rxn = build_reaction_vector_list(n,c)
 for i in range(number_of_runs):
     print("Starting instance %d" %(i+1))
-    # import network
-    print('Import network...')
-    # choose an overdispersed network
-    with open("./example_network_overdispersed.pickle","rb") as input_file:
-        temp = pickle.load(input_file)
-    group_membership = temp[1]
-    n = len(group_membership) #number of individuals in simulation
-    adjacency_matrix = temp[0]
-    # list of reactions
-    print('Building list of reactions...')
-    rxn = build_reaction_vector_list(n,c)
     print('Starting simulation...')
-    t,x = single_model_run_SEIR_eff(final_timepoint,n,np.array([b,g,m,l]),adjacency_matrix,rxn)
+    t,x = single_model_run_SEIR_eff(final_timepoint,n,b,g,m,l,adjacency_matrix,rxn,group_membership,init_infec)
     print("Finished simulation, plotting I over time...")
-
-
     number_of_I = np.zeros(len(t))
     for i in range(len(t)):
         number_of_I[i] = np.sum(x[i][2:-1:c])
-
     plt.plot(t,number_of_I,color='grey',lw=1)
     # process outputs of simulation to compute Rt values per simulation
     # select earliest timepoint in each day
@@ -79,41 +77,35 @@ for i in range(number_of_runs):
 #dump_file(time_series, "time_series", basefile)
 #dump_file(adjacency_matrix, "adjacency_matrix", basefile)
     
-
-
 plt.tick_params(direction='in',size=6) 
 plt.title("Number of infected individuals over time: overdispersed network")
 
 #%% run simulations with poisson network
 plt.figure()
+# import network
+print('Import network...')
+# choose a poisson network
+with open("./example_network_poisson.pickle","rb") as input_file:
+    #with open("./simulations/network_sim_100_10_1000_global_Rts.bin","rb") as input_file:
+    temp = pickle.load(input_file)
+group_membership = temp[1]
+n = len(group_membership) #number of individuals in simulation
+adjacency_matrix = temp[0]
+# list of reactions
+print('Building list of reactions...')
+rxn = build_reaction_vector_list(n,c)
 for i in range(number_of_runs):
     print("Starting instance %d" %(i+1))
-    # import network
-    print('Import network...')
-    # choose a poisson network
-    with open("./example_network_poisson.pickle","rb") as input_file:
-        #with open("./simulations/network_sim_100_10_1000_global_Rts.bin","rb") as input_file:
-        temp = pickle.load(input_file)
-    group_membership = temp[1]
-    n = len(group_membership) #number of individuals in simulation
-    adjacency_matrix = temp[0]
-    # list of reactions
-    print('Building list of reactions...')
-    rxn = build_reaction_vector_list(n,c)
     print('Starting simulation...')
-    t_poisson,x_poisson = single_model_run_SEIR_eff(final_timepoint,n,np.array([b,g,m,l]),adjacency_matrix,rxn)
+    t_poisson,x_poisson = single_model_run_SEIR_eff(final_timepoint,n,b,g,m,l,adjacency_matrix,rxn,group_membership,init_infec)
     print('Final timepoint')
     print(t_poisson[-1])
     print("Finished simulation, plotting I over time...")
-
-
     number_of_I = np.zeros(len(t_poisson))
     for i in range(len(t_poisson)):
         number_of_I[i] = np.sum(x_poisson[i][2:-1:c])
-
     plt.plot(t_poisson,number_of_I,color='grey',lw=1)
     
-
 plt.tick_params(direction='in',size=6) 
 plt.title("Number of infected individuals over time: Poisson network")
 
